@@ -7,10 +7,10 @@ Tank steering and movement using two motors
 ### Remote control
 Option to control the robot with a controller
 ### Obstacle Avoidance
-Avoids obstacles in front using sensors
+Avoids obstacles in front of it using sensors
 ### Vision
-Identifies faces and live feed if in remote control
+Identifies faces and becomes a live feed if in remote control
 ### Audio processing
-Turns to the location of audio source where name is called
+Turns to the location of the audio source where its name is called
 ### Speaker
 Occasionally plays sounds
