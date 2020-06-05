@@ -4,44 +4,46 @@
 #include "serial_com.h"
 
 #define BAUD_RATE   9600    // 9600 bits/sec
+#define DELAY       50      // Delay for coms
+
 
 void setup() {
     Serial.begin(BAUD_RATE);    // Set up Serial library at the BAUD_RATE
+    while (!Serial) {
+        ;   // wait for serial port to connect
+    }
 
     MotorInit();    // Initialize all four motors
 }
 
 void loop() {
-    uint8_t i;
-    SendData(); // Send data (test) to the Raspberry Pi
+    // SendData("Hello Pi");     // Send data (test) to the Raspberry Pi
 
-    // Accelerate motors forwards
-    // Move(FORWARD);
-
-    for (i = 0; i < MAX_MOTOR_SPEED; i++) {
-        SetSpeed(i);
-        delay(10);
+    // Receive data from Raspberry Pi if it's sent
+    if (Serial.available() > 0) {
+        ReceiveData();        // problem
+        char dir = GetDirection();
+        uint8_t spd = GetSpeed();
+        SetSpeed(spd);
+        switch (dir) {
+            case 'F' :
+                Move(FORWARD);
+                break;
+            case 'B' :
+                Move(BACKWARD);
+                break;
+            case 'S' :
+                Move(RELEASE);
+                break;
+            default :
+                Move(RELEASE);
+                Serial.println("Invalid direction");
+        }    
+        // Serial.print("Direction: ");
+        // Serial.println(dir);
+        // Serial.print("Speed: ");
+        // Serial.println(spd);
     }
-    delay(1000);
-    for (i = MAX_MOTOR_SPEED; i > 0; i--) {
-        SetSpeed(i);
-        delay(10);
-    }
-
-    delay(500);
-
-    // Accelerate motors backwards
-    // Move(BACKWARD);
-
-    for (i = 0; i < MAX_MOTOR_SPEED; i++) {
-        SetSpeed(i);
-        delay(10);
-    }
-    delay(1000);
-    for (i = MAX_MOTOR_SPEED; i > 0; i--) {
-        SetSpeed(i);
-        delay(10);
-    }
-
-    delay(500);
+    
+    delay(DELAY);
 }
