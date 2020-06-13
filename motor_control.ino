@@ -23,10 +23,10 @@ void MotorInit() {
 }
 
 
-void SetSpeed(uint8_t speed) {
+void SetSpeed(uint8_t s) {
     uint8_t i;
     for (i = 0; i < NUM_MOTORS; i++) {
-        motorArray[i]->setSpeed(speed);
+        motorArray[i]->setSpeed(s);
     }
 }
 
@@ -36,4 +36,25 @@ void Move(uint8_t dir) {
     for (i = 0; i < NUM_MOTORS; i++) {
         motorArray[i]->run(dir);
     }
+}
+
+// dir : 1 if right, -1 if left
+void Turn(int8_t dir) {
+    if (dir == 1) {
+        motorArray[0]->run(FORWARD);        
+        motorArray[1]->run(BACKWARD);
+        motorArray[3]->run(FORWARD);
+        motorArray[2]->run(BACKWARD);
+    }
+    else if (dir == -1) {
+        motorArray[0]->run(BACKWARD);
+        motorArray[1]->run(FORWARD);
+        motorArray[3]->run(BACKWARD);
+        motorArray[2]->run(FORWARD);
+    }
+    else {
+        return;
+    }
+    // delay(2500);
+    // Move(RELEASE);
 }

@@ -4,26 +4,43 @@
 #include "serial_com.h"
 
 #define BAUD_RATE   9600    // 9600 bits/sec
-#define DELAY       50      // Delay for coms
+#define DELAY       10      // Delay for serial in loop
 
 
+void (*resetFunc) (void) = 0;
 void setup() {
-    Serial.begin(BAUD_RATE);    // Set up Serial library at the BAUD_RATE
     while (!Serial) {
         ;   // wait for serial port to connect
     }
+    Serial.begin(BAUD_RATE);    // Set up Serial library at the BAUD_RATE
+    FlushSerial();
 
     MotorInit();    // Initialize all four motors
+    PerformHandshake();
+    Serial.println("\nArduino handshake complete");
+    SendData(ACK);
 }
 
 void loop() {
-    // SendData("Hello Pi");     // Send data (test) to the Raspberry Pi
+    uint8_t bytesInSerial = Serial.available();
+
+    // filter out carriage returns and new lines
+    byte onTop = Serial.peek();
+    while (onTop == CR || onTop == NL) {
+        Serial.read();
+        bytesInSerial = Serial.available();
+        onTop = Serial.peek();
+    }
+    
+    char dir;
+    uint8_t spd;
 
     // Receive data from Raspberry Pi if it's sent
-    if (Serial.available() > 0) {
-        ReceiveData();        // problem
-        char dir = GetDirection();
-        uint8_t spd = GetSpeed();
+    if (bytesInSerial >= DATA_LENGTH+1) {
+        ReceiveData();
+        ParseData();
+        dir = GetDirection();
+        spd = GetSpeed();
         SetSpeed(spd);
         switch (dir) {
             case 'F' :
@@ -35,15 +52,33 @@ void loop() {
             case 'S' :
                 Move(RELEASE);
                 break;
+            case 'R' :
+                Turn(1);
+                break;
+            case 'L' :
+                Turn(-1);
+                break;
             default :
                 Move(RELEASE);
                 Serial.println("Invalid direction");
-        }    
+        }
         // Serial.print("Direction: ");
         // Serial.println(dir);
         // Serial.print("Speed: ");
         // Serial.println(spd);
+        SendData(ACK);
+        
     }
-    
-    delay(DELAY);
+    else if (Serial.peek() == HANDSHAKE[0] && bytesInSerial == HANDSHAKE_LEN) {
+        if (CheckHandshake()) {
+            delay(COM_DELAY);
+            SendData(HANDSHAKE);
+            FlushSerial();
+            dir = 'S';
+            spd = 0;
+            Move(RELEASE);
+            SendData(ACK);
+        }
+    }
+    // delay(DELAY);
 }

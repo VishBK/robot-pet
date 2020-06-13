@@ -5,7 +5,8 @@
 #include "serial_com.h"
 
 char receivedChars[DATA_LENGTH];
-char direction;   // Direction: F, B, or R
+// char tempChars[DATA_LENGTH];
+char direction;   // Direction: F, B, S, R, or L
 uint8_t speed;    // Speed: 0-255
 
 
@@ -17,12 +18,13 @@ void FlushSerial() {
 
 
 void SendData(char data[]) {
-    Serial.print(data);
+    Serial.println(data);
 }
 
 
 void ParseData() {
-    char seperator[] = ",";
+    char seperator[] = SEPERATOR;
+    // strcpy(tempChars, receivedChars);    Copy if receivedChars is needed
 
     char* tokPtr = strtok(receivedChars, seperator);
     direction = tokPtr[0];
@@ -34,13 +36,15 @@ void ParseData() {
 void ReceiveData() {
     static boolean isReceiving = false;
     static uint8_t idx = 0;
-    char startMarker = '<';
-    char endMarker = '>';
+    uint8_t bytesRead = 0;
+    char startMarker = START_DATA;
+    char endMarker = END_DATA;
     char rc;
     
     while (Serial.available() > 0) {
         rc = Serial.read();
-
+        bytesRead++;
+        
         if (isReceiving == true) {
             if (rc != endMarker) {
                 receivedChars[idx] = rc;
@@ -59,7 +63,31 @@ void ReceiveData() {
             isReceiving = true;
         }
     }
-    ParseData();
+}
+
+
+boolean CheckHandshake() {
+    char received[HANDSHAKE_LEN+1];
+    uint8_t idx = 0;
+    char rc;
+    while (Serial.available() > 0 && idx < HANDSHAKE_LEN) {
+        rc = Serial.read();
+        received[idx] = rc;
+        idx++;
+    }
+    received[idx] = '\0';
+    return strcmp(received, HANDSHAKE) == 0;
+}
+
+
+void PerformHandshake() {
+    boolean handshakeComplete = false;
+    while (!handshakeComplete) {
+        handshakeComplete = CheckHandshake();
+        SendData(HANDSHAKE);
+        delay(COM_DELAY);
+    }
+    FlushSerial();
 }
 
 
@@ -70,4 +98,9 @@ char GetDirection() {
 
 uint8_t GetSpeed() {
     return speed;
+}
+
+
+char* GetReceivedChars() {
+    return receivedChars;
 }
