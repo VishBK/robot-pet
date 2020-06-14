@@ -3,16 +3,20 @@
 import serial
 import time
 import atexit
+import getch
+
 
 SERIAL_PATH = '/dev/arduino'
 BAUD_RATE = 9600
 DELAY = 50/1000
+STOP_COMMAND = '<S,000>'
 HANDSHAKE = '@COM'
 HANDSHAKE_LEN = len(HANDSHAKE)
+IS_KEYBOARD = True
 
 
 def exit_handler(ser):
-    SendData(ser, '<S,000>')    
+    SendData(ser, STOP_COMMAND)    
     ser.flush()
 
 
@@ -76,26 +80,63 @@ def SpeedTest(ser):
 
 
 def TurnTest(ser):
+    turnDelay = 2.8
+    forwardDelay = 2
+
+    # Move forward
+    data = '<F,200>'
+    SendData(ser, data)
+    time.sleep(forwardDelay)
+
     # Turn 90° left
     data = '<L,255>'
     SendData(ser, data)
-    time.sleep(3)
+    time.sleep(turnDelay)
 
     # Move forward
-    data = '<F,128>'
+    data = '<F,200>'
     SendData(ser, data)
-    time.sleep(2)
+    time.sleep(forwardDelay)
 
     # Turn 90° right
     data = '<R,255>'
     SendData(ser, data)
-    time.sleep(3)
+    time.sleep(turnDelay)
 
-    # Move forward
-    data = '<F,128>'
+
+def keyboard_control(key):
+    fast_spd = '225'
+    slow_spd = '100'
+
+    # w = Forward
+    if key == 'w' :
+        data = f'<F,{fast_spd}>'
+    elif key == 'W' :
+        data = f'<F,{slow_spd}>'
+    # s = Backward
+    elif key == 's' :
+        data = f'<B,{fast_spd}>'
+    elif key == 'S' :
+        data = f'<B,{slow_spd}>'
+    # a = Turn right
+    elif key == 'a' :
+        data = f'<R,{fast_spd}>'
+    elif key == 'A' :
+        data = f'<R,{slow_spd}>'
+    # d = Turn left
+    elif key == 'd' :
+        data = f'<L,{fast_spd}>'
+    elif key == 'D' :
+        data = f'<L,{slow_spd}>'
+    # x = quit
+    elif key == 'x' :
+        exit()
+    # anything else = Stop
+    else:
+        data = STOP_COMMAND
+    
     SendData(ser, data)
-    time.sleep(2)
-
+	
 
 if __name__ == '__main__':
     ser = serial.Serial(SERIAL_PATH, BAUD_RATE, timeout=1)
@@ -103,10 +144,12 @@ if __name__ == '__main__':
     ser.flush()
     PerformHandshake(ser)
 
-    SendData(ser, '<S,000>')    # format: '<D,spd>'
+    SendData(ser, STOP_COMMAND)    # format: '<D,spd>'
 
     while True:
         # print(ReceiveData(ser).decode().rstrip())
-        # SendData(ser, '<F,240>')
+        if IS_KEYBOARD:
+            key = getch.getche()
+            keyboard_control(key)
         # SpeedTest(ser)
-        TurnTest(ser)
+        # TurnTest(ser)

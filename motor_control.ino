@@ -55,6 +55,4 @@ void Turn(int8_t dir) {
     else {
         return;
     }
-    // delay(2500);
-    // Move(RELEASE);
 }
