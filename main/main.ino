@@ -2,9 +2,12 @@
 #include <Adafruit_MotorShield.h>
 #include "motor_control.h"
 #include "serial_com.h"
+#include "distance_sensor.h"
 
 #define BAUD_RATE   9600    // 9600 bits/sec
 #define DELAY       10      // Delay for serial in loop
+
+#define STOP_DISTANCE   10  // Stop when an object is this far away in inches
 
 
 void (*resetFunc) (void) = 0;
@@ -20,6 +23,7 @@ void setup() {
     Serial.println("\nArduino handshake complete");
     SendData(ACK);
 }
+
 
 void loop() {
     uint8_t bytesInSerial = Serial.available();
@@ -67,7 +71,6 @@ void loop() {
         // Serial.print("Speed: ");
         // Serial.println(spd);
         SendData(ACK);
-        
     }
     else if (Serial.peek() == HANDSHAKE[0] && bytesInSerial == HANDSHAKE_LEN) {
         if (CheckHandshake()) {
@@ -79,6 +82,14 @@ void loop() {
             Move(RELEASE);
             SendData(ACK);
         }
+    }
+
+    long dist = Get_Distance();
+    
+    if (dist < STOP_DISTANCE && dir == 'F') {
+        SetSpeed(0);
+    } else {
+        SetSpeed(spd);
     }
     // delay(DELAY);
 }

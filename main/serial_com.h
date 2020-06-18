@@ -1,4 +1,3 @@
-
 #define DATA_LENGTH     6
 #define NUM_ARGS        2
 #define START_DATA      '<'

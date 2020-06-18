@@ -118,15 +118,15 @@ def keyboard_control(key):
         data = f'<B,{fast_spd}>'
     elif key == 'S' :
         data = f'<B,{slow_spd}>'
-    # a = Turn right
-    elif key == 'a' :
-        data = f'<R,{fast_spd}>'
-    elif key == 'A' :
-        data = f'<R,{slow_spd}>'
-    # d = Turn left
+    # d = Turn right
     elif key == 'd' :
-        data = f'<L,{fast_spd}>'
+        data = f'<R,{fast_spd}>'
     elif key == 'D' :
+        data = f'<R,{slow_spd}>'
+    # a = Turn left
+    elif key == 'a' :
+        data = f'<L,{fast_spd}>'
+    elif key == 'A' :
         data = f'<L,{slow_spd}>'
     # x = quit
     elif key == 'x' :
