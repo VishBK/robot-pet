@@ -38,15 +38,15 @@ void Move(uint8_t dir) {
     }
 }
 
-// dir : 1 if right, -1 if left
+
 void Turn(int8_t dir) {
-    if (dir == 1) {
+    if (dir == 1) {         // right
         motorArray[0]->run(FORWARD);        
         motorArray[1]->run(BACKWARD);
         motorArray[3]->run(FORWARD);
         motorArray[2]->run(BACKWARD);
     }
-    else if (dir == -1) {
+    else if (dir == -1) {   // left
         motorArray[0]->run(BACKWARD);
         motorArray[1]->run(FORWARD);
         motorArray[3]->run(BACKWARD);
@@ -55,4 +55,9 @@ void Turn(int8_t dir) {
     else {
         return;
     }
+}
+
+
+void TurnToAngle(int16_t angle) {
+    // while gyro != angle, turn
 }

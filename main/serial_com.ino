@@ -1,12 +1,8 @@
-/*
- * File to test serial communication between RPi and Arduino
-*/
-
 #include "serial_com.h"
 
-char receivedChars[DATA_LENGTH];
-// char tempChars[DATA_LENGTH];
-char direction;   // Direction: F, B, S, R, or L
+char receivedChars[DATA_LENGTH+1];
+// char tempChars[DATA_LENGTH+1];
+char direction;   // Direction: F, B, S, L, or R
 uint8_t speed;    // Speed: 0-255
 
 
@@ -21,7 +17,7 @@ void SendData(char data[]) {
     Serial.println(data);
 }
 
-
+// Splits receivedChars on SEPERATOR, and assigns direction and speed
 void ParseData() {
     char seperator[] = SEPERATOR;
     // strcpy(tempChars, receivedChars);    Copy if receivedChars is needed
@@ -32,25 +28,27 @@ void ParseData() {
     speed = atoi(tokPtr);
 }
 
-// Modified from: https://forum.arduino.cc/index.php?topic=396450.0
+
 void ReceiveData() {
-    static boolean isReceiving = false;
+    static bool isReceiving = false;
     static uint8_t idx = 0;
     uint8_t bytesRead = 0;
-    char startMarker = START_DATA;
-    char endMarker = END_DATA;
     char rc;
     
+    /*
+    * While there are bytes in the buffer,
+    * assign receivedChars starting on START_DATA to END_DATA
+    */
     while (Serial.available() > 0) {
         rc = Serial.read();
         bytesRead++;
         
         if (isReceiving == true) {
-            if (rc != endMarker) {
+            if (rc != END_DATA) {
                 receivedChars[idx] = rc;
                 idx++;
-                if (idx >= DATA_LENGTH) {
-                    idx = DATA_LENGTH - 1;
+                if (idx > DATA_LENGTH) {
+                    idx = DATA_LENGTH;
                 }
             }
             else {
@@ -59,14 +57,14 @@ void ReceiveData() {
                 idx = 0;
             }
         }
-        else if (rc == startMarker) {
+        else if (rc == START_DATA) {
             isReceiving = true;
         }
     }
 }
 
 
-boolean CheckHandshake() {
+bool CheckHandshake() {
     char received[HANDSHAKE_LEN+1];
     uint8_t idx = 0;
     char rc;
@@ -81,7 +79,7 @@ boolean CheckHandshake() {
 
 
 void PerformHandshake() {
-    boolean handshakeComplete = false;
+    bool handshakeComplete = false;
     while (!handshakeComplete) {
         handshakeComplete = CheckHandshake();
         SendData(HANDSHAKE);

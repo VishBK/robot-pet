@@ -7,10 +7,17 @@
 #define BAUD_RATE   9600    // 9600 bits/sec
 #define DELAY       10      // Delay for serial in loop
 
-#define STOP_DISTANCE   10  // Stop when an object is this far away in inches
+#define STOP_DISTANCE   10      // Stop when an object is this far away in inches
+#define IS_CONTROLLED   false   // True if robot is manually controlled
 
-
+/**
+ * Resets the Arduino back to setup()
+*/
 void (*resetFunc) (void) = 0;
+
+/**
+ * Called once initially by the Arduino compiler
+*/
 void setup() {
     while (!Serial) {
         ;   // wait for serial port to connect
@@ -24,7 +31,9 @@ void setup() {
     SendData(ACK);
 }
 
-
+/**
+ * Called in a loop by the Arduino compiler
+*/
 void loop() {
     uint8_t bytesInSerial = Serial.available();
 
@@ -39,8 +48,8 @@ void loop() {
     char dir;
     uint8_t spd;
 
-    // Receive data from Raspberry Pi if it's sent
-    if (bytesInSerial >= DATA_LENGTH+1) {
+    // Read data from the serial buffer when it reaches DATA_LENGTH+2 bytes (+2 for start and end chars)
+    if (bytesInSerial >= DATA_LENGTH+2) {
         ReceiveData();
         ParseData();
         dir = GetDirection();
@@ -55,12 +64,12 @@ void loop() {
                 break;
             case 'S' :
                 Move(RELEASE);
+                break;            
+            case 'L' :
+                Turn(-1);
                 break;
             case 'R' :
                 Turn(1);
-                break;
-            case 'L' :
-                Turn(-1);
                 break;
             default :
                 Move(RELEASE);
@@ -73,6 +82,7 @@ void loop() {
         SendData(ACK);
     }
     else if (Serial.peek() == HANDSHAKE[0] && bytesInSerial == HANDSHAKE_LEN) {
+        // if another handshake is sent after confirming the first, reset Arduino
         if (CheckHandshake()) {
             delay(COM_DELAY);
             SendData(HANDSHAKE);
@@ -84,8 +94,8 @@ void loop() {
         }
     }
 
-    long dist = Get_Distance();
-    
+    // Check if anything is in front of bot, if so, then turn right 90°
+    long dist = GetDistance();
     if (dist < STOP_DISTANCE && dir == 'F') {
         SetSpeed(0);
     } else {
