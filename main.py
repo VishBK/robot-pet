@@ -66,6 +66,8 @@ def SendData(ser, data):
             # print("Sending:", data)
             ser.write(data.encode())
             return
+        else:
+            print(ackSignal)
 
 
 def PerformHandshake(ser):
@@ -80,10 +82,10 @@ def PerformHandshake(ser):
     handshakeComplete = False
     while (not handshakeComplete):
         ser.write(HANDSHAKE.encode())
-        print('Handshake sent')
         inData = ReceiveData(ser)
         if (inData == HANDSHAKE):
             handshakeComplete = True
+            ser.write(HANDSHAKE.encode())   # Send signal again for redundancy
             print("Pi handshake complete")
             return
         time.sleep(1)
@@ -160,7 +162,7 @@ def TurnTest(ser):
     time.sleep(turnDelay)
 
 
-def keyboard_control(key):
+def keyboard_control(key, ser):
     """ Handles manual control using the keyboard
 
     Robot continues moving in specified direction until another command is given
@@ -212,13 +214,13 @@ if __name__ == '__main__':
     ser.flush()
     PerformHandshake(ser)
 
-    SendData(ser, STOP_COMMAND)
+    # SendData(ser, STOP_COMMAND)
 
     while True:
-        # print(ReceiveData(ser).decode().rstrip())
         if IS_KEYBOARD:
-            key = getch.getche()    # returns and prints typed key
-            keyboard_control(key)
+            key = getch.getch()    # returns and prints typed key
+            keyboard_control(key, ser)
         else:
             SpeedTest(ser)
             # TurnTest(ser)
+        

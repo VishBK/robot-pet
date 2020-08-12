@@ -1,8 +1,9 @@
 #define MAX_MOTOR_SPEED 255
 #define NUM_MOTORS      4
+#define IMU_TURN_DELAY  100 // time in ms to wait until updating the IMU when turning
 
 /**
- * Initialize the motors
+ * Initializes the motors
 */
 void MotorInit();
 
@@ -21,15 +22,16 @@ void SetSpeed(uint8_t s);
 void Move(uint8_t dir);
 
 /**
- * Turns the bot
+ * Turns the bot continuously
  * 
- * @param dir 1 for right, -1 for left
+ * @param dir positive for right, negative for left
 */
 void Turn(int8_t dir);
 
 /**
- * Turns the bot until it reaches the given angle
+ * Turns the bot relAngle from its current angle. 
+ * Positive angle for clockwise, negative for counterclockwise
  * 
- * @param angle integer from -360 to 360 to turn to 
+ * @param angle integer from -360 to 360 of the amount to turn
 */
-void TurnToAngle(uint16_t angle);
+void TurnToAngle(int16_t relAngle);

@@ -81,8 +81,8 @@ bool CheckHandshake() {
 void PerformHandshake() {
     bool handshakeComplete = false;
     while (!handshakeComplete) {
-        handshakeComplete = CheckHandshake();
         SendData(HANDSHAKE);
+        handshakeComplete = CheckHandshake();
         delay(COM_DELAY);
     }
     FlushSerial();

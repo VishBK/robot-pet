@@ -6,6 +6,7 @@
 #include <Wire.h>
 #include <Adafruit_MotorShield.h>
 #include "motor_control.h"
+#include "imu_sensor.h"
 
 Adafruit_DCMotor* motorArray[NUM_MOTORS];
 
@@ -40,13 +41,13 @@ void Move(uint8_t dir) {
 
 
 void Turn(int8_t dir) {
-    if (dir == 1) {         // right
+    if (dir > 0) {         // right
         motorArray[0]->run(FORWARD);        
         motorArray[1]->run(BACKWARD);
         motorArray[3]->run(FORWARD);
         motorArray[2]->run(BACKWARD);
     }
-    else if (dir == -1) {   // left
+    else if (dir < 0) {   // left
         motorArray[0]->run(BACKWARD);
         motorArray[1]->run(FORWARD);
         motorArray[3]->run(BACKWARD);
@@ -58,6 +59,22 @@ void Turn(int8_t dir) {
 }
 
 
-void TurnToAngle(int16_t angle) {
+void TurnToAngle(int16_t relAngle) {
+    float angle[DATA_DIM];
+    UpdateImu();
+    GetRelAngle(angle);
+    int8_t sign = (relAngle > 0) - (relAngle < 0);  // 1 if positive, -1 if negative
+    // multiply yaw and angle by sign to flip the inequality if needed
+    float curYaw = angle[2]*sign; // store yaw
+    float targetAngle = (angle[2] + relAngle)*sign;
+    
     // while gyro != angle, turn
+    Turn(-relAngle);
+    while (curYaw < targetAngle) {
+        UpdateImu();
+        GetRelAngle(angle);
+        curYaw = angle[2]*sign;
+        delay(IMU_TURN_DELAY);
+    }
+    Move(RELEASE);
 }
