@@ -13,12 +13,12 @@ import getch
 SERIAL_PATH = '/dev/arduino'    # USB path to connected Arduino
 BAUD_RATE = 9600
 DELAY = 50/1000
+IS_KEYBOARD = False
+IS_CONTROLLER = False
 STOP_COMMAND = '<S,000>'
-HANDSHAKE = '@COM'
+HANDSHAKE = '@CM' + str(int(IS_KEYBOARD or IS_CONTROLLER))
 HANDSHAKE_LEN = len(HANDSHAKE)
 ACK_SIGNAL = '!'
-IS_KEYBOARD = True
-IS_CONTROLLER = False
 
 
 def exit_handler(ser):
@@ -66,8 +66,8 @@ def SendData(ser, data):
             # print("Sending:", data)
             ser.write(data.encode())
             return
-        else:
-            print(ackSignal)
+        # else:
+        #     print(ackSignal)          # use for debugging Arduino
 
 
 def PerformHandshake(ser):
@@ -88,7 +88,7 @@ def PerformHandshake(ser):
             ser.write(HANDSHAKE.encode())   # Send signal again for redundancy
             print("Pi handshake complete")
             return
-        time.sleep(1)
+        time.sleep(0.5)
 
 
 def SpeedTest(ser):

@@ -1,5 +1,10 @@
 /*
  * File to test serial communication between RPi and Arduino
+ * 
+ * Handshake is sent from RPi (HANDSHAKE_START + 0 for auto control or 1 for manual).
+ * Arduino checks for incoming serial data for HANDSHAKE_START.
+ * Same handshake from RPi is then sent back to finish the handshake process.
+ * 
  * Data is sent to the Arduino in <D,sss> format where:
  *      D   = direction (F: forward, B: backward, S: release, L: left, R: right)
  *      sss = speed (000-255)
@@ -11,7 +16,7 @@
 #define END_DATA        '>'
 #define SEPERATOR       ","
 #define COM_DELAY       500     // Delay for serial communication (ex: handshake)
-#define HANDSHAKE       "@COM"
+#define HANDSHAKE_START "@CM"   // First 3 characters of handshake
 #define HANDSHAKE_LEN   4
 #define ACK             "!"     // Acknowledge signal
 #define CR              13      // Carriage return ASCII
@@ -75,3 +80,10 @@ uint8_t GetSpeed();
  * @return char array receivedChars
 */
 char* GetReceivedChars();
+
+/**
+ * Returns handshake from RPi
+ * 
+ * @return char array handshake
+*/
+char* GetHandshake();

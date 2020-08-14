@@ -8,12 +8,11 @@
 #define BAUD_RATE   9600    // 9600 bits/sec
 #define DELAY       10      // Delay for serial in loop
 
-#define IS_CONTROLLED   1       // True if robot is manually controlled
-
 #define STOP_DISTANCE   8       // Stop when an object is this far away in inches
 #define DIST_DELAY      100     // milliseconds between each distance check
 #define STOP_ANGLE      90      // Angle to turn by when running into object
 
+bool isControlled;      // True if robot is manually controlled
 bool loopSpdSet;        // flag to check if spd has previously been set in the loop
 unsigned long prevTime; // stores the previous running time
 
@@ -38,6 +37,7 @@ void setup() {
     ImuInit();      // Initialize the IMU sensor
     PerformHandshake();
     Serial.println("Arduino handshake complete");
+    isControlled = GetHandshake()[HANDSHAKE_LEN-1]-'0';   // Last char of handshake determines control
     SendData(ACK);
 }
 
@@ -92,11 +92,12 @@ void loop() {
         Serial.println(spd);
         SendData(ACK);
     }
-    else if (Serial.peek() == HANDSHAKE[0] && bytesInSerial == HANDSHAKE_LEN) {
+    else if (Serial.peek() == HANDSHAKE_START[0] && bytesInSerial == HANDSHAKE_LEN) {
         // if another handshake is sent after confirming the first, reset Arduino
         if (CheckHandshake()) {
             delay(COM_DELAY);
-            SendData(HANDSHAKE);
+            SendData(GetHandshake());
+            isControlled = GetHandshake()[HANDSHAKE_LEN-1]-'0';
             FlushSerial();
             dir = 'S';
             spd = 0;
@@ -113,7 +114,7 @@ void loop() {
         // Check if anything is in front of bot
         if (dist <= STOP_DISTANCE && dir == 'F') {
             // if player controlled, then stop
-            if (IS_CONTROLLED) {
+            if (isControlled) {
                 SetSpeed(0);
             
             // if not, then turn STOP_ANGLE degrees and continue moving forward

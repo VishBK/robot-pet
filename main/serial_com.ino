@@ -2,6 +2,7 @@
 
 char receivedChars[DATA_LENGTH+1];
 // char tempChars[DATA_LENGTH+1];
+char handshake[HANDSHAKE_LEN+1];
 char direction;   // Direction: F, B, S, L, or R
 uint8_t speed;    // Speed: 0-255
 
@@ -65,24 +66,23 @@ void ReceiveData() {
 
 
 bool CheckHandshake() {
-    char received[HANDSHAKE_LEN+1];
     uint8_t idx = 0;
     char rc;
     while (Serial.available() > 0 && idx < HANDSHAKE_LEN) {
         rc = Serial.read();
-        received[idx] = rc;
+        handshake[idx] = rc;
         idx++;
     }
-    received[idx] = '\0';
-    return strcmp(received, HANDSHAKE) == 0;
+    handshake[idx] = '\0';
+    return strncmp(handshake, HANDSHAKE_START, HANDSHAKE_LEN-1) == 0;
 }
 
 
 void PerformHandshake() {
     bool handshakeComplete = false;
     while (!handshakeComplete) {
-        SendData(HANDSHAKE);
         handshakeComplete = CheckHandshake();
+        SendData(handshake);
         delay(COM_DELAY);
     }
     FlushSerial();
@@ -101,4 +101,9 @@ uint8_t GetSpeed() {
 
 char* GetReceivedChars() {
     return receivedChars;
+}
+
+
+char* GetHandshake() {
+    return handshake;
 }
